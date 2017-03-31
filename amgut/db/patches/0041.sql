@@ -1,4 +1,4 @@
--- Oct. 8, 2016
+-- March 31, 2017
 -- Plate Mapper
 
 -- Create tables
@@ -116,14 +116,13 @@ CREATE INDEX idx_sample_plate_layout_sample_id ON pm.sample_plate_layout ( sampl
 COMMENT ON COLUMN pm.sample_plate_layout.name IS 'The name of the sample in this plate in case that needs to be changed (e.g. if the sample has been plated twice)';
 
 CREATE TABLE pm.study (
-	study_id             bigserial  NOT NULL,
-	qiita_study_id       bigint  ,
-	title                varchar  ,
-	alias                varchar  ,
-	notes                varchar  ,
+	study_id             bigint   NOT NULL,
+	title                varchar  NOT NULL,
+	alias                varchar  NOT NULL,
+    jira_key			 varchar  NOT NULL,
 	CONSTRAINT pk_study PRIMARY KEY ( study_id ),
 	CONSTRAINT uq_study_title UNIQUE ( title ) ,
-	CONSTRAINT uq_study_qiita_study_id UNIQUE ( qiita_study_id )
+	CONSTRAINT uq_jira_key UNIQUE ( jira_key )
  );
 
 CREATE TABLE pm.study_sample (
@@ -134,6 +133,15 @@ CREATE TABLE pm.study_sample (
  );
 CREATE INDEX idx_study_sample_study_id ON pm.study_sample ( study_id );
 CREATE INDEX idx_study_sample_sample_id ON pm.study_sample ( sample_id );
+
+CREATE TABLE pm.sample_plate_study (
+	sample_plate_id		bigint NOT NULL,
+	study_id			bigint NOT NULL,
+	CONSTRAINT fk_sample_plate_study FOREIGN KEY ( sample_plate_id ) REFERENCES pm.sample_plate( sample_plate_id ),
+	CONSTRAINT fk_sample_plate_study_study FOREIGN KEY ( study_id ) REFERENCES pm.study( study_id )
+ );
+CREATE INDEX idx_sample_plate_study_sample_plate ON pm.sample_plate_study ( sample_plate_id ) ;
+CREATE INDEX idx_sample_plate_study_study_id ON pm.sample_plate_study ( study_id ) ;
 
 CREATE TABLE pm.tm300_8_tool (
 	tm300_8_tool_id      bigserial  NOT NULL,
