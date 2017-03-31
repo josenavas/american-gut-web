@@ -895,30 +895,6 @@
 				<fk_column name="barcode" pk="barcode" />
 			</fk>
 		</table>
-		<table name="plate" >
-			<column name="plate_id" type="bigint" length="19" jt="-5" mandatory="y" />
-			<column name="plate" type="varchar" length="50" jt="12" />
-			<column name="sequence_date" type="varchar" length="20" jt="12" />
-			<index name="plate_pkey" unique="PRIMARY_KEY" >
-				<column name="plate_id" />
-			</index>
-		</table>
-		<table name="plate_barcode" >
-			<column name="plate_id" type="bigint" length="19" jt="-5" mandatory="y" />
-			<column name="barcode" type="varchar" length="2147483647" jt="12" mandatory="y" />
-			<index name="idx_plate_barcode" unique="NORMAL" >
-				<column name="barcode" />
-			</index>
-			<index name="idx_plate_barcode_0" unique="NORMAL" >
-				<column name="plate_id" />
-			</index>
-			<fk name="fk_plate_barcode" to_schema="barcodes" to_table="barcode" >
-				<fk_column name="barcode" pk="barcode" />
-			</fk>
-			<fk name="fk_plate_barcode_0" to_schema="barcodes" to_table="plate" >
-				<fk_column name="plate_id" pk="plate_id" />
-			</fk>
-		</table>
 		<table name="project" >
 			<column name="project_id" type="bigint" length="19" jt="-5" mandatory="y" />
 			<column name="project" type="varchar" length="1000" jt="12" />
@@ -23049,23 +23025,21 @@ AS $function$xpath_exists$function$
 		<entity schema="ag" name="ag_human_survey" color="c6d9f7" x="2700" y="765" />
 		<entity schema="ag" name="external_survey_answers" color="a8c4ef" x="3135" y="1050" />
 		<entity schema="ag" name="external_survey_sources" color="a8c4ef" x="2685" y="600" />
-		<entity schema="barcodes" name="barcode_exceptions" color="a8c4ef" x="1920" y="1740" />
+		<entity schema="barcodes" name="barcode_exceptions" color="a8c4ef" x="1845" y="1725" />
 		<entity schema="ag" name="survey_question" color="a8c4ef" x="2925" y="90" />
 		<entity schema="ag" name="ag_consent" color="c6d9f7" x="2940" y="765" />
 		<entity schema="ag" name="ag_login_surveys" color="ffcccc" x="2940" y="600" />
 		<entity schema="ag" name="consent_revoked" color="b7c8e3" x="2700" y="2535" />
-		<entity schema="barcodes" name="project_barcode" color="a8c4ef" x="1920" y="1605" />
+		<entity schema="barcodes" name="project_barcode" color="a8c4ef" x="1845" y="1590" />
 		<entity schema="ag" name="settings" color="a8c4ef" x="1170" y="1500" />
 		<entity schema="ag" name="labadmin_users" color="b2cdf7" x="1170" y="1365" />
 		<entity schema="ag" name="duplicate_consents" color="b7c8e3" x="2490" y="765" />
 		<entity schema="ag" name="ag_kit" color="f7e2c6" x="2235" y="1020" />
 		<entity schema="ag" name="ag_animal_survey" color="f7e2c6" x="2040" y="615" />
-		<entity schema="barcodes" name="barcode" color="a8c4ef" x="1920" y="1365" />
-		<entity schema="barcodes" name="plate" color="a8c4ef" x="1590" y="1605" />
-		<entity schema="barcodes" name="plate_barcode" color="a8c4ef" x="1770" y="1605" />
+		<entity schema="barcodes" name="barcode" color="a8c4ef" x="1845" y="1350" />
 		<entity schema="ag" name="ag_handout_barcodes" color="a8c4ef" x="1350" y="360" />
 		<entity schema="ag" name="ag_handout_kits" color="a8c4ef" x="1155" y="360" />
-		<entity schema="barcodes" name="project" color="a8c4ef" x="1770" y="1470" />
+		<entity schema="barcodes" name="project" color="a8c4ef" x="1695" y="1455" />
 		<entity schema="ag" name="ag_login" color="f7e2c6" x="1860" y="735" />
 		<entity schema="ag" name="ag_kit_barcodes" color="f7e2c6" x="1590" y="600" />
 		<entity schema="pm" name="master_mix_lot" color="b2cdf7" x="495" y="405" />
@@ -23144,8 +23118,6 @@ AS $function$xpath_exists$function$
 			<entity schema="ag" name="ag_handout_kits" />
 		</group>
 		<group name="Schema_barcodes" color="c4e0f9" >
-			<entity schema="barcodes" name="plate_barcode" />
-			<entity schema="barcodes" name="plate" />
 			<entity schema="barcodes" name="project_barcode" />
 			<entity schema="barcodes" name="project" />
 			<entity schema="barcodes" name="barcode" />
@@ -23211,6 +23183,13 @@ ALTER INDEX uq_study_title RENAME TO idx_study_0;
 ALTER TABLE pm.sample_plate_study ADD CONSTRAINT fk_sample_plate_study FOREIGN KEY ( sample_plate_id ) REFERENCES pm.sample_plate( sample_plate_id )    ;
 
 ALTER TABLE pm.sample_plate_study ADD CONSTRAINT fk_sample_plate_study_study FOREIGN KEY ( study_id ) REFERENCES pm.study( study_id )    ;
+
+]]></string>
+		</script>
+		<script name="Sql_001" id="SQL693528" >
+			<string><![CDATA[DROP TABLE barcodes.plate;
+
+DROP TABLE barcodes.plate_barcode;
 
 ]]></string>
 		</script>

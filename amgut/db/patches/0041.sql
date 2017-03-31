@@ -295,56 +295,29 @@ INSERT INTO pm.master_mix_lot (name)
 INSERT INTO pm.water_lot (name)
 		VALUES ('RNBD9959');
 
--- Migrate data from barcodes to pm
+-- Drop these unused tables
+DROP TABLE barcodes.plate_barcode;
+DROP TABLE barcodes.plate;
 
-INSERT INTO pm.sample (sample_id)
-		SELECT barcode FROM barcodes.barcode;
-
-UPDATE pm.sample SET barcode = sample_id;
-
-INSERT INTO pm.study (qiita_study_id, title)
-		SELECT project_id, project FROM barcodes.project;
-
-INSERT INTO pm.study_sample (study_id, sample_id)
-		SELECT study_id, barcode FROM barcodes.project_barcode
-		JOIN pm.study ON (project_id = qiita_study_id)
-		ORDER BY study_id, barcode;
-
-DO
-$do$
-DECLARE
-	  pid bigint;
-    pname text;
-	  spid bigint;
-	  bcd text;
-	  col smallint;
-    row smallint;
+-- The table sample_plate_study is creating a loop on the database in a way
+-- that you can get the samples that belong to a study through two different
+-- paths: (1) through the study_sample table, and (2) sample_plate_study ->
+-- sample_plate -> sample_plate_layout -> sample -> study_sample
+-- This loop is required because we know which studies are being plated before
+-- we actually start plating. However, it will be a lack of integrity if a
+-- sample being plated does not belong to a study linked to the plate. Add
+-- a trigger that will check for this entigrity. This should not happen when
+-- using the interface, but it doesn't harm to be a bit paranoic :-)
+CREATE FUNCTION pm.plate_sample_test() RETURNS trigger AS $plate_sample_test$
 BEGIN
-  	FOR pid, pname IN
-        SELECT plate_id, plate
-        FROM barcodes.plate
-        ORDER BY plate_id
-    LOOP
-        INSERT INTO pm.sample_plate (name, email, plate_type_id)
-        VALUES (pname, 'test', 1)
-        RETURNING sample_plate_id INTO spid;
-        col := 1;
-        row := 1;
-        FOR bcd IN
-            SELECT barcode
-            FROM barcodes.plate_barcode
-            WHERE plate_id = pid
-            ORDER BY barcode
-        LOOP
-            INSERT INTO pm.sample_plate_layout (sample_plate_id, sample_id, col, row)
-            VALUES (spid, bcd, col, row);
-            IF (row < 8) THEN
-                row := row + 1;
-            ELSE
-                row := 1;
-                col := col + 1;
-            END IF;
-        END LOOP;
-    END LOOP;
-END
-$do$;
+	-- Check that the sample being plated actually belongs to a study
+	-- linked to the plate
+	IF (SELECT study_id FROM pm.study_sample WHERE sample_id = NEW.sample_id) NOT IN (SELECT DISTINCT study_id FROM pm.sample_plate_study WHERE sample_plate_id = NEW.sample_plate_id) THEN
+		RAISE EXCEPTION 'Sample % does not belong to a study being plated in %', NEW.sample_id, NEW.sample_plate_id;
+	END IF;
+	RETURN NEW;
+END;
+$plate_sample_test$ LANGUAGE plpgsql;
+
+CREATE TRIGGER plate_sample_test BEFORE INSERT OR UPDATE ON pm.sample_plate_layout
+	FOR EACH ROW EXECUTE PROCEDURE pm.plate_sample_test();
